@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-project(libmdnsd)
+project(mdnsd)
 
 set(MDNSD_LOGLEVEL 300 CACHE STRING "Level at which logs shall be reported")
 
@@ -48,10 +48,7 @@ if(BUILD_SHARED_LIBS)
   set(MDNSD_DYNAMIC_LINKING ON)
 endif()
 
-configure_file("mdnsd_config.h.in" "${PROJECT_BINARY_DIR}/mdnsd_config.h")
-include_directories(${PROJECT_BINARY_DIR})
-
-set(PUBLIC_INCLUDES mdnsd.h 1035.h sdtxt.h xht.h)
+set(PUBLIC_INCLUDES mdnsd.h 1035.h sdtxt.h xht.h mdnsd_config.h)
 if(CMAKE_C_COMPILER_ID MATCHES MSVC)
   list(APPEND PUBLIC_INCLUDES ms_stdint.h)
 endif()
@@ -71,12 +68,15 @@ if(MDNSD_COMPILE_AS_CXX)
     set_source_files_properties(${LIBRARY_FILES} PROPERTIES LANGUAGE CXX)
 endif()
 
-add_library(libmdnsd ${LIBRARY_FILES} ${PUBLIC_INCLUDES})
-set_property(TARGET libmdnsd PROPERTY OUTPUT_NAME "mdnsd")
-set_property(TARGET libmdnsd PROPERTY DEFINE_SYMBOL "MDNSD_DYNAMIC_LINKING_EXPORT")
+add_compile_definitions(MDNSD_LOGLEVEL=${MDNSD_LOGLEVEL})
+
+add_library(${PROJECT_NAME} ${LIBRARY_FILES} ${PUBLIC_INCLUDES})
+if(MDNSD_DYNAMIC_LINKING)
+  target_compile_definitions(${PROJECT_NAME} PUBLIC MDNSD_DYNAMIC_LINKING_EXPORT)
+endif()
 
 if(WIN32)
-  target_link_libraries(libmdnsd PUBLIC wsock32 ws2_32)
+  target_link_libraries(${PROJECT_NAME} PUBLIC wsock32 ws2_32)
 endif()
 
 install(
@@ -88,10 +88,5 @@ install(
 
 install(
     FILES ${PUBLIC_INCLUDES}
-    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}"
-)
-
-install(
-    FILES ${PROJECT_BINARY_DIR}/mdnsd_config.h
-    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/lib${PROJECT_NAME}"
 )
