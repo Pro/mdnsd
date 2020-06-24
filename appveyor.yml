@@ -75,5 +75,5 @@ build_script:
   - cd build
   - echo "Testing %CC_NAME%"
   - cmake -DMDNSD_COMPILE_AS_CXX:BOOL=%FORCE_CXX% -G"%CC_NAME%" ..
-  - cmake --build . --config '%TARGET%' --target all
+  - cmake --build . --config '%TARGET%'
   - echo "Build done"
