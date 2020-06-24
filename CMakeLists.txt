@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-project(mdnsd)
+project(mdnsd_example)
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/tools/cmake")
 
 include(GNUInstallDirs)
@@ -15,11 +15,9 @@ if(MDNSD_BUILD_FUZZING)
     add_definitions(-DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
 endif()
 
-set(BUILD_SHARED_LIBS_DEFAULT ON)
 if(MDNSD_BUILD_OSS_FUZZ)
-    set(BUILD_SHARED_LIBS_DEFAULT OFF)
+    set(BUILD_SHARED_LIBS OFF)
 endif()
-option(BUILD_SHARED_LIBS "Build libmdnsd as a shared library" ${BUILD_SHARED_LIBS_DEFAULT})
 
 if(MDNSD_BUILD_FUZZING_CORPUS)
     add_definitions(-DMDNSD_DEBUG_DUMP_PKGS_FILE)
@@ -51,13 +49,13 @@ if(MDNSD_BUILD_FUZZING OR MDNSD_BUILD_OSS_FUZZ)
     add_subdirectory(tests/fuzz)
 endif()
 
-add_executable(mdnsd mdnsd.c)
-target_link_libraries(mdnsd PRIVATE libmdnsd)
+add_executable(mdns_daemon mdnsd.c)
+target_link_libraries(mdns_daemon PRIVATE mdnsd)
 
 add_executable(mquery mquery.c)
-target_link_libraries(mquery PRIVATE libmdnsd)
+target_link_libraries(mquery PRIVATE mdnsd)
 
-install(TARGETS mdnsd mquery
+install(TARGETS mdns_daemon mquery
     RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
 )
 

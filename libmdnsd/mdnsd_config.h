@@ -22,27 +22,26 @@
 #define MDNSD_calloc(num, size) calloc(num, size)
 #define MDNSD_realloc(ptr, size) realloc(ptr, size)
 
-#define MDNSD_LOGLEVEL ${MDNSD_LOGLEVEL}
-
 /**
  * Function Export
  * --------------- */
 /* On Win32: Define MDNSD_DYNAMIC_LINKING and MDNSD_DYNAMIC_LINKING_EXPORT in order to
    export symbols for a DLL. Define MDNSD_DYNAMIC_LINKING only to import symbols
 	from a DLL.*/
-#cmakedefine MDNSD_DYNAMIC_LINKING
-#ifdef _WIN32
-# ifdef MDNSD_DYNAMIC_LINKING_EXPORT
-#  ifdef __GNUC__
-#   define MDNSD_EXPORT __attribute__ ((dllexport))
+#ifdef MDNSD_DYNAMIC_LINKING
+# ifdef _WIN32
+#  ifdef MDNSD_DYNAMIC_LINKING_EXPORT
+#   ifdef __GNUC__
+#    define MDNSD_EXPORT __attribute__ ((dllexport))
+#   else
+#    define MDNSD_EXPORT __declspec(dllexport)
+#   endif
 #  else
-#   define MDNSD_EXPORT __declspec(dllexport)
-#  endif
-# else
-#  ifdef __GNUC__
-#   define MDNSD_EXPORT __attribute__ ((dllexport))
-#  else
-#   define MDNSD_EXPORT __declspec(dllimport)
+#   ifdef __GNUC__
+#    define MDNSD_EXPORT __attribute__ ((dllexport))
+#   else
+#    define MDNSD_EXPORT __declspec(dllimport)
+#   endif
 #  endif
 # endif
 #else
