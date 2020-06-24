@@ -15,19 +15,35 @@ environment:
     matrix:
         - CC_NAME: MinGW Makefiles
           CC_SHORTNAME: mingw
-          MAKE: mingw32-make
+          TARGET: Release
+          FORCE_CXX: OFF
+        - CC_NAME: MinGW Makefiles
+          CC_SHORTNAME: mingw
+          TARGET: Debug
           FORCE_CXX: OFF
         - CC_NAME: Visual Studio 9 2008
           CC_SHORTNAME: vs2008
-          MAKE: msbuild mdnsd.sln /m
+          TARGET: Release
+          FORCE_CXX: ON
+        - CC_NAME: Visual Studio 9 2008
+          CC_SHORTNAME: vs2008
+          TARGET: Debug
           FORCE_CXX: ON
         - CC_NAME: Visual Studio 12 2013
           CC_SHORTNAME: vs2013
-          MAKE: msbuild mdnsd.sln /m
+          TARGET: Release
+          FORCE_CXX: OFF
+        - CC_NAME: Visual Studio 12 2013
+          CC_SHORTNAME: vs2013
+          TARGET: Debug
           FORCE_CXX: OFF
         - CC_NAME: Visual Studio 12 2013 Win64
           CC_SHORTNAME: vs2013-x64
-          MAKE: msbuild mdnsd.sln /m
+          TARGET: Release
+          FORCE_CXX: OFF
+        - CC_NAME: Visual Studio 12 2013 Win64
+          CC_SHORTNAME: vs2013-x64
+          TARGET: Debug
           FORCE_CXX: OFF
 
 
@@ -59,5 +75,5 @@ build_script:
   - cd build
   - echo "Testing %CC_NAME%"
   - cmake -DMDNSD_COMPILE_AS_CXX:BOOL=%FORCE_CXX% -G"%CC_NAME%" ..
-  - '%MAKE%'
+  - cmake --build ./build --config '%TARGET%' --target all --
   - echo "Build done"
