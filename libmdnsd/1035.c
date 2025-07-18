@@ -214,6 +214,12 @@ static int _lmatch(struct message *m, const char *l1, const char *l2)
 	/* Compare all label characters */
 	if (*l1 != *l2)
 		return 0;
+
+
+	/* Both are empty */
+	if (*l1 == 0 && *l2 == 0)
+		return 1;
+
 	for (len = 1; len <= *l1; len++) {
 		if (l1[len] != l2[len])
 			return 0;
@@ -223,10 +229,6 @@ static int _lmatch(struct message *m, const char *l1, const char *l2)
 	l1 += *l1 + 1;
 	l2 += *l2 + 1;
 
-	/* At the end, all matched */
-	if (*l1 == 0 && *l2 == 0)
-		return 1;
-
 	/* Try next labels */
 	return _lmatch(m, l1, l2);
 }
@@ -235,6 +237,7 @@ static int _lmatch(struct message *m, const char *l1, const char *l2)
 static int _host(struct message *m, unsigned char **bufp, const char *name)
 {
 	char label[256], *l;
+	memset(label, 0, sizeof(label));
 	int len = 0, x = 1, y = 0, last = 0;
 
 	if (name == 0)
