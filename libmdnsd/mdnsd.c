@@ -381,6 +381,25 @@ static void _r_done(mdns_daemon_t *d, mdns_record_t *r)
 		if (cur)
 			cur->next = r->next;
 	}
+
+	//remove unicast answers for this record, otherwise they will hold a dangling pointer
+	struct unicast *u = d->uanswers;
+	struct unicast *newAnswers = 0;
+	while (u) {
+		struct unicast *tmp = u;
+		if (u->r == r) {
+			u = u->next;
+			MDNSD_free(tmp);
+		}
+		else
+		{
+			tmp->next = newAnswers;
+			newAnswers=tmp;
+			u = u->next;
+		}
+	}
+	d->uanswers = newAnswers;
+
 	MDNSD_free(r->rr.name);
 	MDNSD_free(r->rr.rdata);
 	MDNSD_free(r->rr.rdname);
