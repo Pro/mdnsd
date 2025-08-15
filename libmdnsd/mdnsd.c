@@ -740,7 +740,7 @@ int mdnsd_in(mdns_daemon_t *d, struct message *m, struct sockaddr *ip, unsigned 
 			}
 
 			/* Send the matching unicast reply */
-			if (!hasConflict && port != 5353)
+			if (!hasConflict && port != 5353 /* htons(5353) */)
 				_u_push(d, r_start, m->id, ip, port);
 		}
 
@@ -750,7 +750,7 @@ int mdnsd_in(mdns_daemon_t *d, struct message *m, struct sockaddr *ip, unsigned 
 	/* Process each answer, check for a conflict, and cache */
 	for (i = 0; i < m->ancount; i++) {
 		if (m->an[i].name == NULL) {
-			MDNSD_LOG_ERROR("Got answer with NULL name at %p. Type: %d, TTL: %ld\n", (void*)&m->an[i], m->an[i].type, m->an[i].ttl);
+			MDNSD_LOG_ERROR("Got answer with NULL name at %p. Type: %d, TTL: %lu\n", (void*)&m->an[i], m->an[i].type, m->an[i].ttl);
 			return 3;
 		}
 
@@ -792,7 +792,7 @@ int mdnsd_out(mdns_daemon_t *d, struct message *m, struct sockaddr *ip, unsigned
 			memset(&addr, 0, sizeof(addr));
 			addr.sin_family = AF_INET;
 			addr.sin_port = *port;
-			inet_pton(AF_INET, "224.0.0.251", &(addr.sin_addr));
+			inet_pton(AF_INET, "224.0.0.251" /* "0.0.0.0" */, &(addr.sin_addr));
 			memcpy(ip, &addr, sizeof(addr));
 	}
 	m->header.qr = 1;
@@ -806,7 +806,6 @@ int mdnsd_out(mdns_daemon_t *d, struct message *m, struct sockaddr *ip, unsigned
 
 		d->uanswers = u->next;
 		*port = u->port;
-		ip = u->to;
 		m->id = (unsigned short int)u->id;
 		message_qd(m, u->r->rr.name, u->r->rr.type, (unsigned short int)d->clazz);
 		message_an(m, u->r->rr.name, u->r->rr.type, (unsigned short int)d->clazz, u->r->rr.ttl);
@@ -1009,21 +1008,21 @@ struct timeval *mdnsd_sleep(mdns_daemon_t *d)
 	if (d->a_pause) {
 		if ((usec = _tvdiff(d->now, d->pause)) > 0)
 			d->sleep.tv_usec = usec;
-		RET;
+		RET
 	}
 
 	/* Now check for probe retries */
 	if (d->probing) {
 		if ((usec = _tvdiff(d->now, d->probe)) > 0)
 			d->sleep.tv_usec = usec;
-		RET;
+		RET
 	}
 
 	/* Now check for publish retries */
 	if (d->a_publish) {
 		if ((usec = _tvdiff(d->now, d->publish)) > 0)
 			d->sleep.tv_usec = usec;
-		RET;
+		RET
 	}
 
 	/* Also check for queries with known answer expiration/retry */
@@ -1031,7 +1030,7 @@ struct timeval *mdnsd_sleep(mdns_daemon_t *d)
 		int sec;
 		if ((sec = (int)(d->checkqlist - (unsigned long int)d->now.tv_sec)) > 0)
 			d->sleep.tv_sec = sec;
-		RET;
+		RET
 	}
 
 	/* Resend published records before TTL expires */
@@ -1056,7 +1055,7 @@ struct timeval *mdnsd_sleep(mdns_daemon_t *d)
 	// publish 2 seconds before expire.
 	d->sleep.tv_sec = minExpire > 2 ? minExpire-2 : 0;
 	d->pause.tv_sec = d->now.tv_sec + d->sleep.tv_sec;
-	RET;
+	RET
 }
 
 void mdnsd_query(mdns_daemon_t *d, const char *host, int type, int (*answer)(mdns_answer_t *a, void *arg), void *arg)
@@ -1174,16 +1173,20 @@ void mdnsd_set_raw(mdns_daemon_t *d, mdns_record_t *r, const char *data, unsigne
 {
 	MDNSD_free(r->rr.rdata);
 	r->rr.rdata = (unsigned char *)MDNSD_malloc(len);
-	memcpy(r->rr.rdata, data, len);
-	r->rr.rdlen = len;
-	_r_publish(d, r);
+	if (NULL != r->rr.rdata) {
+		memcpy(r->rr.rdata, data, len);
+		r->rr.rdlen = len;
+		_r_publish(d, r);
+	}
 }
 
 void mdnsd_set_host(mdns_daemon_t *d, mdns_record_t *r, const char *name)
 {
 	MDNSD_free(r->rr.rdname);
 	r->rr.rdname = STRDUP(name);
-	_r_publish(d, r);
+	if (NULL != r->rr.rdname) {
+		_r_publish(d, r);
+	}
 }
 
 void mdnsd_set_ip(mdns_daemon_t *d, mdns_record_t *r, struct in_addr ip)

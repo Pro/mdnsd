@@ -80,7 +80,7 @@ static unsigned short int _ldecomp(const unsigned char *ptr)
 static bool _label(struct message *m, const unsigned char **bufp, const unsigned char *bufEnd, char **namep)
 {
 	int x;
-	const unsigned char *label;
+	const unsigned char *label = NULL;
 	char *name;
 
 	/* Set namep to the end of the block */
@@ -428,7 +428,7 @@ static bool _rrparse(struct message *m, struct resource *rr, int count, const un
 	while (m->_len & 7)			\
 		m->_len++;			\
 		                        \
-    if (m->_len + y > MAX_PACKET_LEN) { return false; } \
+	if (m->_len + y > MAX_PACKET_LEN) { return false; } \
 	x = (cast)(void *)(m->_packet + m->_len);	\
 	m->_len += y;
 
@@ -436,7 +436,6 @@ bool message_parse(struct message *m, unsigned char *packet, size_t packetLen)
 {
 	int i;
 	const unsigned char *buf;
-	m->_bufEnd = packet + packetLen;
 
 	/* Message format: https://tools.ietf.org/html/rfc1035
 
@@ -455,6 +454,7 @@ bool message_parse(struct message *m, unsigned char *packet, size_t packetLen)
 
 	if (packet == 0 || m == 0)
 		return false;
+	m->_bufEnd = packet + packetLen;
 
 	/* See https://tools.ietf.org/html/rfc1035
 	                                1  1  1  1  1  1
@@ -504,7 +504,7 @@ bool message_parse(struct message *m, unsigned char *packet, size_t packetLen)
     // check if the message has the correct size, i.e. the count matches the number of bytes
 
 	/* Process questions */
-	my(m->qd, (sizeof(struct question) * m->qdcount), struct question *);
+	my(m->qd, (sizeof(struct question) * m->qdcount), struct question *)
 	for (i = 0; i < m->qdcount; i++) {
 		if (!_label(m, &buf, m->_bufEnd, &(m->qd[i].name))) {
             return false;
@@ -520,9 +520,9 @@ bool message_parse(struct message *m, unsigned char *packet, size_t packetLen)
     }
 
 	/* Process rrs */
-	my(m->an, (sizeof(struct resource) * m->ancount), struct resource *);
-	my(m->ns, (sizeof(struct resource) * m->nscount), struct resource *);
-	my(m->ar, (sizeof(struct resource) * m->arcount), struct resource *);
+	my(m->an, (sizeof(struct resource) * m->ancount), struct resource *)
+	my(m->ns, (sizeof(struct resource) * m->nscount), struct resource *)
+	my(m->ar, (sizeof(struct resource) * m->arcount), struct resource *)
 	if (!_rrparse(m, m->an, m->ancount, &buf, m->_bufEnd))
 		return false;
 	if (!_rrparse(m, m->ns, m->nscount, &buf, m->_bufEnd))
